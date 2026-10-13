@@ -1,0 +1,10 @@
+{
+  "name": "DisasterGuard AI",
+  "description": "Intelligent Disaster Prediction, Monitoring, and Emergency Operations System aligned with UN SDG 13 (Climate Action).",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
