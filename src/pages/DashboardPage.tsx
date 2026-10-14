@@ -13,7 +13,8 @@ import {
   Filter,
   CheckCircle,
   ExternalLink,
-  Info
+  Info,
+  Radio
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -165,32 +166,46 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
 
         {/* Card 2: Live Weather */}
-        <div className="bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all rounded-xl p-4 shadow-lg">
+        {/* Card 2: Live Weather Server Telemetry */}
+        <div 
+          onClick={() => onNavigateTab('monitoring')}
+          className="bg-slate-900 border border-slate-800 hover:border-sky-500/50 transition-all rounded-xl p-4 shadow-lg cursor-pointer group"
+          title="Click to view full Live Weather Server telemetry & radar"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
-            <span className="font-medium uppercase tracking-wider">Surface Temperature</span>
-            <Thermometer className="w-4 h-4 text-sky-400" />
+            <span className="font-medium uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              Live Server Weather
+            </span>
+            <Thermometer className="w-4 h-4 text-sky-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-3xl font-black text-white font-mono flex items-baseline gap-1">
-            {weather ? `${weather.temperature}` : '26.4'}
+            {weather ? `${weather.temperature.toFixed(1)}` : '26.4'}
             <span className="text-sm font-sans font-normal text-slate-400">°C</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 truncate">
-            Apparent: {weather?.apparentTemperature ?? 28}°C • {weather?.humidity ?? 68}% RH
+          <p className="text-[11px] text-sky-300 mt-2 truncate flex items-center justify-between">
+            <span>Feels {weather?.apparentTemperature ? `${weather.apparentTemperature.toFixed(1)}°C` : '28°C'} • {weather?.humidity ?? 68}% RH</span>
+            <span className="text-[10px] text-emerald-400 font-mono font-bold">STREAM</span>
           </p>
         </div>
 
-        {/* Card 3: Wind & Precipitation */}
-        <div className="bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all rounded-xl p-4 shadow-lg">
+        {/* Card 3: Wind & Atmospheric Pressure */}
+        <div 
+          onClick={() => onNavigateTab('monitoring')}
+          className="bg-slate-900 border border-slate-800 hover:border-teal-500/50 transition-all rounded-xl p-4 shadow-lg cursor-pointer group"
+          title="Click to view wind vectors, gusts & barometric trend"
+        >
           <div className="flex items-center justify-between text-slate-400 text-xs mb-2">
-            <span className="font-medium uppercase tracking-wider">Wind & Rainfall</span>
-            <Wind className="w-4 h-4 text-teal-400" />
+            <span className="font-medium uppercase tracking-wider">Atmospheric Dynamics</span>
+            <Wind className="w-4 h-4 text-teal-400 group-hover:scale-110 transition-transform" />
           </div>
           <div className="text-3xl font-black text-white font-mono flex items-baseline gap-1">
             {weather ? `${weather.windSpeed}` : '14'}
             <span className="text-sm font-sans font-normal text-slate-400">km/h</span>
           </div>
-          <p className="text-[11px] text-teal-400 mt-2 truncate">
-            Precipitation: {weather?.precipitation ?? 0} mm/h (Open-Meteo)
+          <p className="text-[11px] text-teal-300 mt-2 truncate flex items-center justify-between">
+            <span>Rain: {weather?.precipitation ?? 0} mm/h • {weather?.surfacePressure ? Math.round(weather.surfacePressure) : 1012} hPa</span>
+            <span className="text-[10px] text-slate-400 font-mono">AQI {weather?.airQuality?.aqi ?? 45}</span>
           </p>
         </div>
 
@@ -449,9 +464,19 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               Observational telemetry & multi-day forecast curves for flood and heatwave vulnerability evaluation.
             </p>
           </div>
-          <span className="text-[11px] px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono self-start sm:self-auto">
-            Source: Open-Meteo High-Resolution NWP
-          </span>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={() => onNavigateTab('monitoring')}
+              className="text-xs px-3 py-1.5 rounded-lg bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 transition-colors flex items-center gap-1.5 font-semibold cursor-pointer"
+            >
+              <Radio className="w-3.5 h-3.5 text-sky-400" />
+              <span>Live Weather Stream</span>
+              <ArrowRight className="w-3 h-3 text-sky-400" />
+            </button>
+            <span className="text-[11px] px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-slate-400 font-mono hidden md:inline">
+              ECMWF / GFS
+            </span>
+          </div>
         </div>
 
         <div className="h-60 w-full">

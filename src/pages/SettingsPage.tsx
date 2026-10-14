@@ -13,19 +13,23 @@ import {
   Lock,
   Server
 } from 'lucide-react';
-import { UserRole, AuditLogItem } from '../types';
+import { UserRole, AuditLogItem, AuthUser } from '../types';
 import { API } from '../services/api';
 
 interface SettingsPageProps {
   currentUserRole: UserRole;
   onRoleChange: (role: UserRole) => void;
   onReloadDemoData: () => void;
+  authUser?: AuthUser | null;
+  onNavigateLogin?: () => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   currentUserRole,
   onRoleChange,
-  onReloadDemoData
+  onReloadDemoData,
+  authUser,
+  onNavigateLogin
 }) => {
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [systemStatus, setSystemStatus] = useState<any>(null);
@@ -76,14 +80,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               Active Operator Profile & Access Control Role
             </h2>
 
-            <div className="p-3 bg-slate-850 rounded-xl border border-slate-800 flex items-center justify-between">
+            <div className="p-3.5 bg-slate-850 rounded-xl border border-slate-800 flex items-center justify-between">
               <div>
-                <div className="text-xs font-bold text-white">Emergency Officer Demo Account</div>
-                <div className="text-[11px] text-slate-400">ops@disasterguard.org</div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>{authUser ? authUser.name : 'Guest Emergency Officer'}</span>
+                  {authUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                </div>
+                <div className="text-[11px] text-slate-400 font-mono">{authUser ? authUser.email : 'Unauthenticated'}</div>
+                {authUser && (
+                  <div className="text-[10px] text-slate-500 mt-0.5 font-mono">
+                    Badge: {authUser.badgeId} • Station: {authUser.dutyStation}
+                  </div>
+                )}
               </div>
-              <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 font-mono font-bold text-xs border border-rose-500/30">
-                {currentUserRole}
-              </span>
+              <div className="text-right space-y-1">
+                <span className="px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-300 font-mono font-bold text-xs border border-rose-500/30 inline-block">
+                  {currentUserRole}
+                </span>
+                {onNavigateLogin && (
+                  <div>
+                    <button
+                      onClick={onNavigateLogin}
+                      className="text-[10px] text-sky-400 hover:text-sky-300 underline font-semibold block ml-auto cursor-pointer"
+                    >
+                      {authUser ? 'Manage Account / Switch User →' : 'Sign in to Live Server →'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>

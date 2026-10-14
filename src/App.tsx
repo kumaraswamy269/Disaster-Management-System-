@@ -14,8 +14,9 @@ import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
 import { SensorsPage } from './pages/SensorsPage';
+import { LoginPage } from './pages/LoginPage';
 
-import { WeatherData, AlertItem, ShelterItem, UserRole, RealWorldDisasterItem, DistressBeaconItem, SensorItem } from './types';
+import { WeatherData, AlertItem, ShelterItem, UserRole, RealWorldDisasterItem, DistressBeaconItem, SensorItem, AuthUser, AuthSession } from './types';
 import { API } from './services/api';
 
 export default function App() {
@@ -27,7 +28,9 @@ export default function App() {
   const [realWorldDisasters, setRealWorldDisasters] = useState<RealWorldDisasterItem[]>([]);
   const [distressBeacons, setDistressBeacons] = useState<DistressBeaconItem[]>([]);
   const [sensors, setSensors] = useState<SensorItem[]>([]);
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Disaster Manager');
+  const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Administrator');
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const [authSession, setAuthSession] = useState<AuthSession | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedAlertForModal, setSelectedAlertForModal] = useState<AlertItem | null>(null);
 
@@ -95,7 +98,47 @@ export default function App() {
     fetchWeatherData(currentLocation);
   }, [currentLocation.lat, currentLocation.lon]);
 
+  // Check live server authentication on boot
+  const checkLiveAuth = async () => {
+    try {
+      const res = await API.getMe();
+      if (res.authenticated && res.user && res.session) {
+        setAuthUser(res.user);
+        setAuthSession(res.session);
+        setCurrentUserRole(res.user.role);
+      } else {
+        // Auto-login default duty officer for instant live interactive operations
+        if (!API.getToken()) {
+          try {
+            const loginRes = await API.login('admin@disasterguard.org', 'admin123');
+            setAuthUser(loginRes.user);
+            setAuthSession(loginRes.session);
+            setCurrentUserRole(loginRes.user.role);
+          } catch (e) {
+            console.warn('Initial live server login note:', e);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Live server auth verification warning:', err);
+    }
+  };
+
+  const handleLoginSuccess = (user: AuthUser, session: AuthSession) => {
+    setAuthUser(user);
+    setAuthSession(session);
+    setCurrentUserRole(user.role);
+  };
+
+  const handleLogout = async () => {
+    await API.logout();
+    setAuthUser(null);
+    setAuthSession(null);
+    setCurrentUserRole('General User');
+  };
+
   useEffect(() => {
+    checkLiveAuth();
     fetchAlertsData();
     fetchSheltersData();
     fetchRealWorldData();
@@ -121,6 +164,7 @@ export default function App() {
     await fetchAlertsData();
     await fetchSheltersData();
     await fetchWeatherData();
+    await checkLiveAuth();
   };
 
   const activeAlertsCount = alerts.filter(a => a.status === 'Active').length;
@@ -138,10 +182,22 @@ export default function App() {
         weather={weather}
         alerts={alerts}
         currentUserRole={currentUserRole}
-        onRoleChange={setCurrentUserRole}
+        onRoleChange={(role) => {
+          setCurrentUserRole(role);
+          if (authUser) {
+            API.switchRole(role).then(res => {
+              setAuthUser(res.user);
+            }).catch(console.warn);
+          }
+        }}
         mobileMenuOpen={mobileMenuOpen}
         setMobileMenuOpen={setMobileMenuOpen}
         onSelectAlert={handleSelectAlert}
+        onNavigateSensors={() => setCurrentTab('sensors')}
+        onNavigateWeather={() => setCurrentTab('monitoring')}
+        authUser={authUser}
+        onNavigateLogin={() => setCurrentTab('login')}
+        onLogout={handleLogout}
       />
 
       {/* 3. Main Workspace Shell */}
@@ -154,6 +210,7 @@ export default function App() {
           openSheltersCount={openSheltersCount}
           mobileMenuOpen={mobileMenuOpen}
           setMobileMenuOpen={setMobileMenuOpen}
+          authUser={authUser}
         />
 
         {/* Dynamic Page Content Viewport */}
@@ -181,6 +238,17 @@ export default function App() {
             />
           )}
 
+          {currentTab === 'login' && (
+            <LoginPage
+              authUser={authUser}
+              authSession={authSession}
+              onLoginSuccess={handleLoginSuccess}
+              onLogout={handleLogout}
+              onNavigateTab={setCurrentTab}
+              onRoleChange={setCurrentUserRole}
+            />
+          )}
+
           {currentTab === 'sensors' && (
             <SensorsPage
               currentLocation={currentLocation}
@@ -201,6 +269,9 @@ export default function App() {
               weather={weather}
               onLocationChange={handleLocationChange}
               onRefreshWeather={() => fetchWeatherData(currentLocation)}
+              onNavigateTab={(tab) => setCurrentTab(tab as NavTab)}
+              alerts={alerts}
+              onRefreshAlerts={fetchAlertsData}
             />
           )}
 
@@ -257,6 +328,8 @@ export default function App() {
               currentUserRole={currentUserRole}
               onRoleChange={setCurrentUserRole}
               onReloadDemoData={handleReloadDemoData}
+              authUser={authUser}
+              onNavigateLogin={() => setCurrentTab('login')}
             />
           )}
 

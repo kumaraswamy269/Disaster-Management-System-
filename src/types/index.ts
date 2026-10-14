@@ -57,21 +57,73 @@ export interface EvacuationPlanItem {
   createdAt: string;
 }
 
+export interface WeatherAirQuality {
+  aqi: number;
+  usAqi?: number;
+  category: 'Good' | 'Fair' | 'Moderate' | 'Poor' | 'Very Poor' | 'Hazardous';
+  pm25: number;
+  pm10: number;
+  co?: number;
+  no2?: number;
+  so2?: number;
+  ozone?: number;
+}
+
+export interface LiveWeatherServerStatus {
+  connected: boolean;
+  latencyMs: number;
+  serverTimestamp: string;
+  protocol: string;
+  streamActive: boolean;
+  activeStreams?: number;
+  serverUptime?: number;
+}
+
+export interface LiveWeatherStreamTick {
+  type: string;
+  packetId?: number;
+  timestamp: string;
+  lat: number;
+  lon: number;
+  serverStatus: string;
+  pingMs?: number;
+  microVariance?: {
+    windJitter: number;
+    tempJitter: number;
+    pressJitter: number;
+  };
+  health?: string;
+  message?: string;
+}
+
 export interface WeatherData {
   temperature: number;
   apparentTemperature: number;
+  dewPoint?: number;
   humidity: number;
   windSpeed: number;
   windDirection: number;
+  windGusts?: number;
   precipitation: number;
   surfacePressure: number;
+  pressureTrend?: 'Rising' | 'Falling' | 'Steady';
   weatherCode: number;
+  cloudCover?: number;
+  visibilityKm?: number;
+  uvIndex?: number;
+  isDay?: boolean;
+  airQuality?: WeatherAirQuality;
+  serverStatus?: LiveWeatherServerStatus;
   hourly?: {
     time: string[];
     temperature: number[];
     precipitation: number[];
     windSpeed: number[];
     soilMoisture?: number[];
+    precipitationProbability?: number[];
+    humidity?: number[];
+    cloudCover?: number[];
+    uvIndex?: number[];
   };
   daily?: {
     time: string[];
@@ -80,6 +132,11 @@ export interface WeatherData {
     tempMin: number[];
     precipitationSum: number[];
     windMax: number[];
+    windGustsMax?: number[];
+    precipitationProbabilityMax?: number[];
+    sunrise?: string[];
+    sunset?: string[];
+    uvIndexMax?: number[];
   };
   dataSource: string;
   retrievedAt: string;
@@ -135,6 +192,31 @@ export interface MLEvaluationResult {
 }
 
 export type UserRole = 'Administrator' | 'Disaster Manager' | 'General User';
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  department: string;
+  clearanceLevel: string;
+  badgeId: string;
+  dutyStation: string;
+  avatarBg?: string;
+  isActive: boolean;
+  registeredAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface AuthSession {
+  token: string;
+  user: AuthUser;
+  createdAt: string;
+  expiresAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+  serverTimestamp?: string;
+}
 
 export interface UserProfile {
   name: string;

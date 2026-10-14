@@ -12,11 +12,14 @@ import {
   Settings, 
   Info,
   ExternalLink,
-  Activity
+  Activity,
+  KeyRound
 } from 'lucide-react';
+import { AuthUser } from '../types';
 
 export type NavTab = 
   | 'dashboard'
+  | 'login'
   | 'sensors'
   | 'prediction'
   | 'monitoring'
@@ -36,6 +39,7 @@ interface SidebarProps {
   openSheltersCount: number;
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
+  authUser?: AuthUser | null;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -44,13 +48,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeAlertsCount,
   openSheltersCount,
   mobileMenuOpen,
-  setMobileMenuOpen
+  setMobileMenuOpen,
+  authUser
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { 
+      id: 'login', 
+      label: authUser ? 'Operator Account' : 'Live Server Login', 
+      icon: KeyRound, 
+      badge: authUser ? 'Active' : 'Live Server', 
+      pulse: !authUser 
+    },
     { id: 'sensors', label: 'IoT Sensor Network', icon: Activity, badge: 'Live IoT', pulse: true },
     { id: 'prediction', label: 'Disaster Prediction', icon: BrainCircuit, badge: 'AI/ML' },
-    { id: 'monitoring', label: 'Live Monitoring', icon: Radio },
+    { id: 'monitoring', label: 'Live Monitoring', icon: Radio, badge: 'Live Server', pulse: true },
     { id: 'map', label: 'Disaster Risk Map', icon: Map },
     { id: 'alerts', label: 'Emergency Alerts', icon: AlertOctagon, count: activeAlertsCount, countColor: 'bg-rose-500' },
     { id: 'shelters', label: 'Safe Shelters', icon: Home, count: openSheltersCount, countColor: 'bg-emerald-600' },

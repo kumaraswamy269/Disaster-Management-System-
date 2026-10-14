@@ -10,9 +10,11 @@ import {
   X, 
   CheckCircle2, 
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  KeyRound,
+  LogOut
 } from 'lucide-react';
-import { WeatherData, AlertItem, UserRole } from '../types';
+import { WeatherData, AlertItem, UserRole, AuthUser } from '../types';
 
 interface HeaderProps {
   currentLocationName: string;
@@ -25,6 +27,10 @@ interface HeaderProps {
   setMobileMenuOpen: (open: boolean) => void;
   onSelectAlert?: (alert: AlertItem) => void;
   onNavigateSensors?: () => void;
+  onNavigateWeather?: () => void;
+  authUser?: AuthUser | null;
+  onNavigateLogin?: () => void;
+  onLogout?: () => void;
 }
 
 export const PRESET_LOCATIONS = [
@@ -46,7 +52,11 @@ export const Header: React.FC<HeaderProps> = ({
   mobileMenuOpen,
   setMobileMenuOpen,
   onSelectAlert,
-  onNavigateSensors
+  onNavigateSensors,
+  onNavigateWeather,
+  authUser,
+  onNavigateLogin,
+  onLogout
 }) => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -138,19 +148,27 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right: Live Weather Summary, Notifications, Role Profile */}
         <div className="flex items-center gap-2.5">
-          {/* Live Weather Capsule */}
+          {/* Live Weather Server Capsule */}
           {weather && (
-            <div className="hidden sm:flex items-center gap-3 px-3 py-1.5 rounded-lg bg-slate-800/70 border border-slate-700/80 text-xs">
+            <button
+              onClick={onNavigateWeather}
+              className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 hover:border-sky-500/50 text-xs transition-all cursor-pointer group shadow-sm"
+              title="Click to open Live Monitoring (Weather, Radar & Surveillance)"
+            >
               <div className="flex items-center gap-1.5 text-sky-300 font-semibold">
-                <CloudRain className="w-3.5 h-3.5 text-sky-400" />
-                <span>{weather.temperature}°C</span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                <CloudRain className="w-3.5 h-3.5 text-sky-400 group-hover:scale-110 transition-transform" />
+                <span>{weather.temperature.toFixed(1)}°C</span>
               </div>
               <div className="h-3 w-[1px] bg-slate-700" />
               <div className="flex items-center gap-1 text-slate-300">
                 <Wind className="w-3.5 h-3.5 text-teal-400" />
                 <span>{weather.windSpeed} km/h</span>
               </div>
-            </div>
+              <span className="text-[10px] font-mono text-emerald-400 font-bold hidden lg:inline">
+                LIVE
+              </span>
+            </button>
           )}
 
           {/* Live IoT Sensor Telemetry Pulse Capsule */}
@@ -229,68 +247,108 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* User Profile & Role Selector */}
-          <div className="relative">
+          {/* User Profile / Live Server Login */}
+          {!authUser ? (
             <button
-              onClick={() => {
-                setShowProfileMenu(!showProfileMenu);
-                setShowNotifications(false);
-              }}
-              className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 transition-colors"
+              onClick={onNavigateLogin}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-rose-600 to-rose-700 hover:from-rose-500 hover:to-rose-600 text-white text-xs font-bold shadow-md shadow-rose-950/60 transition-all cursor-pointer"
+              title="Click to sign in to Live Server"
             >
-              <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center font-bold text-[11px] text-white">
-                <User className="w-3.5 h-3.5" />
-              </div>
-              <div className="hidden sm:block text-left">
-                <div className="font-semibold text-slate-200 text-[11px] leading-tight">Duty Officer</div>
-                <div className="text-[9px] text-rose-400 font-mono uppercase">{currentUserRole}</div>
-              </div>
-              <ChevronDown className="w-3 h-3 text-slate-400 hidden sm:block" />
+              <KeyRound className="w-3.5 h-3.5 text-rose-200" />
+              <span className="hidden sm:inline">Live Server Login</span>
+              <span className="sm:hidden">Login</span>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
             </button>
-
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3 z-50">
-                <div className="pb-2 border-b border-slate-800">
-                  <div className="text-xs font-semibold text-white">Emergency Officer Profile</div>
-                  <div className="text-[11px] text-slate-400">ops@disasterguard.un.org</div>
-                  <div className="mt-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-emerald-400 font-mono inline-block">
-                    Demo Persistence Mode Active
+          ) : (
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setShowProfileMenu(!showProfileMenu);
+                  setShowNotifications(false);
+                }}
+                className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 transition-colors cursor-pointer"
+              >
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-tr ${authUser.avatarBg || 'from-rose-600 to-amber-600'} flex items-center justify-center font-bold text-[10px] text-white`}>
+                  {authUser.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </div>
+                <div className="hidden sm:block text-left">
+                  <div className="font-semibold text-slate-200 text-[11px] leading-tight max-w-[120px] truncate">
+                    {authUser.name}
+                  </div>
+                  <div className="text-[9px] text-rose-400 font-mono uppercase flex items-center gap-1">
+                    <span>{authUser.role}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                   </div>
                 </div>
+                <ChevronDown className="w-3 h-3 text-slate-400 hidden sm:block" />
+              </button>
 
-                <div className="py-2">
-                  <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
-                    Switch Access Role
+              {showProfileMenu && (
+                <div className="absolute right-0 mt-2 w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-3.5 z-50">
+                  <div className="pb-2.5 border-b border-slate-800">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[10px] font-mono font-bold text-slate-400 uppercase">Live Server Operator</span>
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        {authUser.badgeId}
+                      </span>
+                    </div>
+                    <div className="text-xs font-bold text-white">{authUser.name}</div>
+                    <div className="text-[11px] text-slate-400 font-mono truncate">{authUser.email}</div>
+                    <div className="text-[10px] text-slate-400 mt-1 truncate">{authUser.department}</div>
                   </div>
-                  <div className="space-y-1">
-                    {(['Administrator', 'Disaster Manager', 'General User'] as UserRole[]).map(role => (
-                      <button
-                        key={role}
-                        onClick={() => {
-                          onRoleChange(role);
-                          setShowProfileMenu(false);
-                        }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded text-xs transition-colors flex items-center justify-between ${
-                          currentUserRole === role 
-                            ? 'bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30' 
-                            : 'text-slate-300 hover:bg-slate-800'
-                        }`}
-                      >
-                        <span>{role}</span>
-                        {currentUserRole === role && <span className="text-[10px] text-rose-400">Active</span>}
-                      </button>
-                    ))}
+
+                  <div className="py-2.5">
+                    <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                      Switch Active Role
+                    </div>
+                    <div className="space-y-1">
+                      {(['Administrator', 'Disaster Manager', 'General User'] as UserRole[]).map(role => (
+                        <button
+                          key={role}
+                          onClick={() => {
+                            onRoleChange(role);
+                            setShowProfileMenu(false);
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 rounded text-xs transition-colors flex items-center justify-between ${
+                            currentUserRole === role 
+                              ? 'bg-rose-500/20 text-rose-300 font-semibold border border-rose-500/30' 
+                              : 'text-slate-300 hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>{role}</span>
+                          {currentUserRole === role && <span className="text-[10px] text-rose-400 font-mono">Active</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                    <button
+                      onClick={() => {
+                        if (onNavigateLogin) onNavigateLogin();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <KeyRound className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Account & Live Sessions Deck</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (onLogout) onLogout();
+                        setShowProfileMenu(false);
+                      }}
+                      className="w-full py-1.5 px-2 rounded-lg bg-rose-950/30 hover:bg-rose-900/40 border border-rose-500/30 text-xs font-semibold text-rose-300 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Sign Out from Live Server</span>
+                    </button>
                   </div>
                 </div>
-
-                <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400">
-                  <p className="leading-snug">
-                    Administrator can edit, acknowledge, and resolve alerts, shelters, and system parameters.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </header>
