@@ -13,8 +13,9 @@ import { AIAssistantPage } from './pages/AIAssistantPage';
 import { ReportsPage } from './pages/ReportsPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { AboutPage } from './pages/AboutPage';
+import { SensorsPage } from './pages/SensorsPage';
 
-import { WeatherData, AlertItem, ShelterItem, UserRole } from './types';
+import { WeatherData, AlertItem, ShelterItem, UserRole, RealWorldDisasterItem, DistressBeaconItem, SensorItem } from './types';
 import { API } from './services/api';
 
 export default function App() {
@@ -23,6 +24,9 @@ export default function App() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [shelters, setShelters] = useState<ShelterItem[]>([]);
+  const [realWorldDisasters, setRealWorldDisasters] = useState<RealWorldDisasterItem[]>([]);
+  const [distressBeacons, setDistressBeacons] = useState<DistressBeaconItem[]>([]);
+  const [sensors, setSensors] = useState<SensorItem[]>([]);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Disaster Manager');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedAlertForModal, setSelectedAlertForModal] = useState<AlertItem | null>(null);
@@ -57,6 +61,36 @@ export default function App() {
     }
   };
 
+  // Load real-world disasters
+  const fetchRealWorldData = async () => {
+    try {
+      const res = await API.getRealWorldDisasters(2.5);
+      setRealWorldDisasters(res.disasters);
+    } catch (err) {
+      console.warn('Real world fetch warning:', err);
+    }
+  };
+
+  // Load distress beacons
+  const fetchDistressData = async () => {
+    try {
+      const beacons = await API.getDistressBeacons();
+      setDistressBeacons(beacons);
+    } catch (err) {
+      console.warn('Distress beacons fetch warning:', err);
+    }
+  };
+
+  // Load sensors
+  const fetchSensorsData = async () => {
+    try {
+      const res = await API.getSensors();
+      setSensors(res.sensors || []);
+    } catch (err) {
+      console.warn('Sensors fetch warning:', err);
+    }
+  };
+
   useEffect(() => {
     fetchWeatherData(currentLocation);
   }, [currentLocation.lat, currentLocation.lon]);
@@ -64,6 +98,9 @@ export default function App() {
   useEffect(() => {
     fetchAlertsData();
     fetchSheltersData();
+    fetchRealWorldData();
+    fetchDistressData();
+    fetchSensorsData();
   }, []);
 
   const handleLocationChange = (newLoc: { name: string; lat: number; lon: number }) => {
@@ -126,9 +163,28 @@ export default function App() {
               weather={weather}
               alerts={alerts}
               shelters={shelters}
+              realWorldDisasters={realWorldDisasters}
+              distressBeacons={distressBeacons}
+              sensors={sensors}
               currentLocation={currentLocation}
               onNavigateTab={setCurrentTab}
               onSelectAlert={handleSelectAlert}
+              onSelectRealWorld={(disaster) => {
+                setCurrentLocation({
+                  name: disaster.location,
+                  lat: disaster.coordinates[0],
+                  lon: disaster.coordinates[1],
+                  hazard: disaster.magnitude ? `${disaster.type} M${disaster.magnitude}` : `${disaster.type} - ${disaster.title}`
+                });
+                setCurrentTab('map');
+              }}
+            />
+          )}
+
+          {currentTab === 'sensors' && (
+            <SensorsPage
+              currentLocation={currentLocation}
+              onNavigateTab={setCurrentTab}
             />
           )}
 
@@ -155,6 +211,7 @@ export default function App() {
               shelters={shelters}
               onSelectAlert={handleSelectAlert}
               onSelectShelter={() => setCurrentTab('shelters')}
+              onNavigateTab={setCurrentTab}
             />
           )}
 

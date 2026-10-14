@@ -3,7 +3,6 @@ import {
   Info, 
   ShieldAlert, 
   Globe, 
-  GraduationCap, 
   Cpu, 
   Database, 
   Lock, 
@@ -33,29 +32,29 @@ export const AboutPage: React.FC = () => {
         </p>
       </div>
 
-      {/* Academic Context & Project Identity */}
+      {/* System Profile & Platform Architecture */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-2.5">
           <div className="flex items-center gap-2 text-rose-400 font-bold text-sm">
-            <GraduationCap className="w-4 h-4" />
-            <span>Academic Specification & Capstone Profile</span>
+            <Layers className="w-4 h-4" />
+            <span>Platform Specification & Operational Profile</span>
           </div>
           <div className="space-y-2 text-xs text-slate-300">
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-slate-400">Project Title:</span>
-              <span className="font-semibold text-white">AI-Based Disaster Management System</span>
+              <span className="text-slate-400">System Name:</span>
+              <span className="font-semibold text-white">DisasterGuard AI Disaster Intelligence</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-slate-400">Program / Degree:</span>
-              <span className="font-semibold text-white">BTech Computer Science and Engineering</span>
+              <span className="text-slate-400">Architecture:</span>
+              <span className="font-semibold text-white">Full-Stack Real-Time Geospatial Intelligence</span>
             </div>
             <div className="flex justify-between py-1 border-b border-slate-800">
-              <span className="text-slate-400">Specialization:</span>
-              <span className="font-semibold text-white">Artificial Intelligence & Machine Learning (AI/ML)</span>
+              <span className="text-slate-400">Core Engine:</span>
+              <span className="font-semibold text-white">Multi-Hazard Predictive & Early Warning Engine</span>
             </div>
             <div className="flex justify-between py-1">
               <span className="text-slate-400">Primary Objective:</span>
-              <span className="font-semibold text-emerald-400">Decision-Support & Spatial Wayfinding</span>
+              <span className="font-semibold text-emerald-400">Decision-Support, IoT Telemetry & Spatial Wayfinding</span>
             </div>
           </div>
         </div>

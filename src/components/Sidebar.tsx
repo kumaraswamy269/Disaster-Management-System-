@@ -11,11 +11,13 @@ import {
   BarChart3, 
   Settings, 
   Info,
-  ExternalLink
+  ExternalLink,
+  Activity
 } from 'lucide-react';
 
 export type NavTab = 
   | 'dashboard'
+  | 'sensors'
   | 'prediction'
   | 'monitoring'
   | 'map'
@@ -46,8 +48,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'sensors', label: 'IoT Sensor Network', icon: Activity, badge: 'Live IoT', pulse: true },
     { id: 'prediction', label: 'Disaster Prediction', icon: BrainCircuit, badge: 'AI/ML' },
-    { id: 'monitoring', label: 'Live Monitoring', icon: Radio, pulse: true },
+    { id: 'monitoring', label: 'Live Monitoring', icon: Radio },
     { id: 'map', label: 'Disaster Risk Map', icon: Map },
     { id: 'alerts', label: 'Emergency Alerts', icon: AlertOctagon, count: activeAlertsCount, countColor: 'bg-rose-500' },
     { id: 'shelters', label: 'Safe Shelters', icon: Home, count: openSheltersCount, countColor: 'bg-emerald-600' },
@@ -140,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             Strengthen resilience & adaptive capacity to climate-related hazards and natural disasters.
           </p>
           <div className="mt-2 pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400 font-mono">
-            <span>BTech CSE AI/ML</span>
+            <span>Disaster Intelligence</span>
             <span className="text-emerald-400">Ver 1.2.0</span>
           </div>
         </div>

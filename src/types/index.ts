@@ -151,3 +151,95 @@ export interface AuditLogItem {
   user: string;
   details: string;
 }
+
+export interface RealWorldDisasterItem {
+  id: string;
+  type: 'Earthquake' | 'Severe Weather' | 'Tsunami Warning' | 'Volcano' | 'Wildfire' | 'Cyclone';
+  title: string;
+  magnitude?: number;
+  location: string;
+  coordinates: [number, number]; // [lat, lng]
+  depthKm?: number;
+  time: string;
+  severity: SeverityLevel;
+  url: string;
+  tsunami: boolean;
+  alertLevel?: string; // green, yellow, orange, red
+  source: string;
+  radiusKm?: number;
+  significance?: number;
+}
+
+export type DistressUrgency = 'Critical (Life at Risk)' | 'Urgent' | 'Moderate';
+export type DistressStatus = 'Pending Rescue' | 'Team Dispatched' | 'Resolved / Rescued';
+
+export interface DistressBeaconItem {
+  id: string;
+  senderName: string;
+  contact: string;
+  locationName: string;
+  coordinates: [number, number];
+  emergencyType: 'Trapped by Water' | 'Medical Urgent' | 'Structure Collapse' | 'Elderly/Infant Evac' | 'Food/Water Cutoff';
+  peopleCount: number;
+  urgency: DistressUrgency;
+  status: DistressStatus;
+  notes: string;
+  timestamp: string;
+}
+
+export interface ScenarioSimulationResult {
+  hazard: string;
+  location: string;
+  coordinates: [number, number];
+  intensityMetric: string;
+  impactRadiusKm: number;
+  estimatedAffectedPop: number;
+  vulnerableStructuresEst: number;
+  shelterDeficitEst: number;
+  recommendedEvacPerimeterKm: number;
+  actionPlan: string[];
+  simulatedAt: string;
+}
+
+export type MapBaseLayer = 'satellite' | 'dark' | 'streets' | 'topo';
+
+export type SensorType = 
+  | 'River Level Gauge'
+  | 'Seismic Accelerometer'
+  | 'Thermal Wildfire Optical'
+  | 'Coastal Tide Buoy'
+  | 'Rainfall Radar Gauge'
+  | 'Slope Inclinometer'
+  | 'Volcanic Infrasound'
+  | 'Borehole Strainmeter';
+
+export type SensorStatus = 'Normal' | 'Warning' | 'Critical' | 'Offline';
+
+export interface SensorReadingHistory {
+  timestamp: string;
+  value: number;
+}
+
+export interface SensorItem {
+  id: string;
+  name: string;
+  type: SensorType;
+  hazard: DisasterCategory;
+  location: string;
+  coordinates: [number, number];
+  currentValue: number;
+  unit: string;
+  warningThreshold: number;
+  criticalThreshold: number;
+  status: SensorStatus;
+  batteryLevel: number; // 0-100%
+  signalQuality: 'Excellent' | 'Good' | 'Weak' | 'Cellular 5G' | 'LoRaWAN' | 'Satellite Iridium';
+  latencyMs: number;
+  lastUpdated: string;
+  rateOfChange?: number;
+  rateOfChangeUnit?: string;
+  anomalyScore?: number; // 0-100
+  history: SensorReadingHistory[];
+}
+
+

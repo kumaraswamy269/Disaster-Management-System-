@@ -24,6 +24,7 @@ interface HeaderProps {
   mobileMenuOpen: boolean;
   setMobileMenuOpen: (open: boolean) => void;
   onSelectAlert?: (alert: AlertItem) => void;
+  onNavigateSensors?: () => void;
 }
 
 export const PRESET_LOCATIONS = [
@@ -44,7 +45,8 @@ export const Header: React.FC<HeaderProps> = ({
   onRoleChange,
   mobileMenuOpen,
   setMobileMenuOpen,
-  onSelectAlert
+  onSelectAlert,
+  onNavigateSensors
 }) => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -150,6 +152,16 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
           )}
+
+          {/* Live IoT Sensor Telemetry Pulse Capsule */}
+          <button
+            onClick={onNavigateSensors}
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/40 text-xs text-rose-300 hover:bg-rose-900/40 transition-colors cursor-pointer"
+            title="Real-Time IoT Disaster Sensors Stream"
+          >
+            <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+            <span className="font-mono font-bold text-[11px]">IoT Sensors: ⚡ LIVE</span>
+          </button>
 
           {/* Notifications Dropdown */}
           <div className="relative">

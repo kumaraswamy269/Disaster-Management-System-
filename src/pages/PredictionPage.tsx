@@ -163,7 +163,7 @@ export const PredictionPage: React.FC<PredictionPageProps> = ({
               Decision-Support Intelligence
             </span>
             <span className="text-slate-600">•</span>
-            <span className="text-xs text-emerald-400 font-mono">BTech CSE AI/ML Capstone Core</span>
+            <span className="text-xs text-emerald-400 font-mono">Statistical &amp; ML Predictive Core</span>
           </div>
           <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
             <BrainCircuit className="w-6 h-6 text-rose-500" />

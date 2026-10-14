@@ -28,28 +28,44 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
-import { AlertItem, ShelterItem, WeatherData } from '../types';
+import { AlertItem, ShelterItem, WeatherData, RealWorldDisasterItem, DistressBeaconItem, SensorItem } from '../types';
 import { MapComponent } from '../components/MapComponent';
+import { Globe, LifeBuoy, PackageCheck, Zap, Activity, Cpu } from 'lucide-react';
 
 interface DashboardPageProps {
   weather: WeatherData | null;
   alerts: AlertItem[];
   shelters: ShelterItem[];
+  realWorldDisasters?: RealWorldDisasterItem[];
+  distressBeacons?: DistressBeaconItem[];
+  sensors?: SensorItem[];
   currentLocation: { name: string; lat: number; lon: number };
   onNavigateTab: (tab: any) => void;
   onSelectAlert: (alert: AlertItem) => void;
+  onSelectRealWorld?: (disaster: RealWorldDisasterItem) => void;
 }
 
 export const DashboardPage: React.FC<DashboardPageProps> = ({
   weather,
   alerts,
   shelters,
+  realWorldDisasters = [],
+  distressBeacons = [],
+  sensors = [],
   currentLocation,
   onNavigateTab,
-  onSelectAlert
+  onSelectAlert,
+  onSelectRealWorld
 }) => {
   const [filterSeverity, setFilterSeverity] = useState<string>('All');
   const [filterType, setFilterType] = useState<string>('All');
+
+  // 72-Hour Survival Go-Bag Interactive Calculator state
+  const [bagAdults, setBagAdults] = useState(2);
+  const [bagKids, setBagKids] = useState(1);
+  const [bagDays, setBagDays] = useState(3);
+  const totalWaterLiters = (bagAdults * 4 + bagKids * 3) * bagDays;
+  const totalRationsKcal = (bagAdults * 2200 + bagKids * 1600) * bagDays;
 
   const activeAlerts = alerts.filter(a => a.status === 'Active');
   const extremeAlerts = activeAlerts.filter(a => a.severity === 'Extreme');
@@ -221,14 +237,103 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             zoom={6}
             alerts={alerts}
             shelters={shelters}
+            realWorldDisasters={realWorldDisasters}
+            sensors={sensors}
+            distressBeacons={distressBeacons}
             selectedLocationName={currentLocation.name}
-            height="380px"
+            defaultBaseLayer="satellite"
+            height="390px"
             onSelectAlert={onSelectAlert}
+            onSelectRealWorld={onSelectRealWorld}
+            onSelectSensor={() => onNavigateTab('sensors')}
             onSelectShelter={() => onNavigateTab('shelters')}
           />
+
+          {/* Real-World Disasters Multi-Hazard Live Stream Bar */}
+          {realWorldDisasters.length > 0 && (
+            <div className="pt-2 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-2 text-xs">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                  Live Real-World Multi-Hazard Stream (USGS & Global Satellite Hotspots)
+                </span>
+                <button
+                  onClick={() => onNavigateTab('map')}
+                  className="text-[11px] text-rose-400 hover:text-rose-300 font-mono font-semibold flex items-center gap-1 cursor-pointer"
+                >
+                  <span>Explore on Map ({realWorldDisasters.length} Active Events)</span>
+                  <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {realWorldDisasters.slice(0, 3).map(hazard => {
+                  const badgeColor = 
+                    hazard.type === 'Wildfire' ? 'bg-amber-950/80 text-amber-300 border-amber-500/50' :
+                    hazard.type === 'Cyclone' ? 'bg-cyan-950/80 text-cyan-300 border-cyan-500/50' :
+                    hazard.type === 'Volcano' ? 'bg-orange-950/80 text-orange-300 border-orange-500/50' :
+                    'bg-rose-950/80 text-rose-300 border-rose-500/50';
+
+                  return (
+                    <div
+                      key={hazard.id}
+                      onClick={() => {
+                        if (onSelectRealWorld) onSelectRealWorld(hazard);
+                        onNavigateTab('map');
+                      }}
+                      className="p-2.5 rounded-xl bg-slate-850 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/50 cursor-pointer transition-all text-xs group"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`font-mono font-bold px-1.5 py-0.5 rounded border text-[10px] uppercase tracking-wider ${badgeColor}`}>
+                          {hazard.type === 'Earthquake' && hazard.magnitude ? `M${hazard.magnitude} EQ` : hazard.type}
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-mono">
+                          {new Date(hazard.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div className="font-semibold text-slate-200 truncate group-hover:text-white transition-colors">
+                        {hazard.location}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono flex items-center justify-between mt-1">
+                        <span className="truncate max-w-[140px]">{hazard.depthKm ? `Depth: ${hazard.depthKm} km` : hazard.source}</span>
+                        <span className="text-rose-400 font-bold ml-1 shrink-0">{hazard.severity}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Quick IoT Sensor Telemetry Strip */}
+          {sensors && sensors.length > 0 && (
+            <div className="pt-2 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="font-medium text-slate-300">
+                  IoT Sensor Network: <strong className="text-white font-mono">{sensors.length} Stations</strong> Active &amp; Streaming
+                </span>
+                {sensors.filter(s => s.status === 'Critical').length > 0 && (
+                  <span className="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-mono px-1.5 py-0.5 rounded animate-pulse font-bold">
+                    {sensors.filter(s => s.status === 'Critical').length} Critical Alert
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => onNavigateTab('sensors')}
+                className="text-[11px] text-emerald-400 hover:text-emerald-300 font-mono font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                <span>Open High-Speed Telemetry Oscilloscope</span>
+                <ArrowRight className="w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Right: 1 Column Hazard Distribution & Quick Recommended Directives */}
+        {/* Right: 1 Column Hazard Distribution & 72-Hour Survival Calculator */}
         <div className="space-y-6">
           {/* Hazard Distribution Chart */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
@@ -240,7 +345,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
               Recorded disaster alerts categorized by primary climate impact.
             </p>
 
-            <div className="h-44 w-full">
+            <div className="h-40 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={riskData} layout="vertical" margin={{ top: 5, right: 10, left: 15, bottom: 5 }}>
                   <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} />
@@ -258,31 +363,74 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             </div>
           </div>
 
-          {/* Recommended Precautionary Directives */}
-          <div className="bg-gradient-to-br from-slate-900 to-slate-850 border border-slate-800 rounded-2xl p-5 shadow-xl">
-            <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              Standard Precautionary Protocol
-            </h3>
-            <div className="space-y-2 text-xs text-slate-300">
-              <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/50 flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 mt-1.5 shrink-0" />
-                <p className="leading-snug">
-                  <strong>72h Emergency Survival Kit:</strong> Maintain 3 days of potable water (4L/person/day), waterproof torch, and battery bank.
-                </p>
+          {/* Interactive 72-Hour Survival Go-Bag Interactive Kit Calculator */}
+          <div className="bg-gradient-to-br from-slate-900 to-slate-850 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                <PackageCheck className="w-4 h-4 text-emerald-400" />
+                72h Survival Kit Calculator
+              </h3>
+              <span className="text-[9px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30">
+                FEMA / UN Standard
+              </span>
+            </div>
+
+            {/* Inputs: Adults, Kids, Days */}
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-0.5">Adults</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="12"
+                  value={bagAdults}
+                  onChange={(e) => setBagAdults(Math.max(1, Number(e.target.value)))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                />
               </div>
-              <div className="p-2 rounded-lg bg-slate-800/60 border border-slate-700/50 flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-1.5 shrink-0" />
-                <p className="leading-snug">
-                  <strong>Official Directives:</strong> Do not cross flooded causeways or underpasses. Observe mandatory coastal evacuation orders.
-                </p>
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-0.5">Children</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="12"
+                  value={bagKids}
+                  onChange={(e) => setBagKids(Math.max(0, Number(e.target.value)))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-0.5">Days</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="14"
+                  value={bagDays}
+                  onChange={(e) => setBagDays(Math.max(1, Number(e.target.value)))}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-1 text-xs text-white"
+                />
               </div>
             </div>
+
+            {/* Calculation output badges */}
+            <div className="grid grid-cols-2 gap-2 text-center text-xs">
+              <div className="p-2 rounded-xl bg-slate-850 border border-slate-700/80">
+                <div className="text-[10px] text-sky-400 font-mono">Potable Water</div>
+                <div className="text-base font-black text-white font-mono mt-0.5">{totalWaterLiters} Liters</div>
+                <div className="text-[9px] text-slate-500">4L/adult + 3L/child per day</div>
+              </div>
+              <div className="p-2 rounded-xl bg-slate-850 border border-slate-700/80">
+                <div className="text-[10px] text-amber-400 font-mono">Emergency Rations</div>
+                <div className="text-base font-black text-white font-mono mt-0.5">{Math.round(totalRationsKcal / 1000)}k kcal</div>
+                <div className="text-[9px] text-slate-500">Non-perishable energy</div>
+              </div>
+            </div>
+
             <button
-              onClick={() => onNavigateTab('evacuation')}
-              className="mt-3 w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              onClick={() => onNavigateTab('assistant')}
+              className="w-full py-2 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-xs font-semibold text-slate-200 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span>Open Evacuation Planner</span>
+              <span>Get Full Go-Bag Checklist from AI</span>
               <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
             </button>
           </div>

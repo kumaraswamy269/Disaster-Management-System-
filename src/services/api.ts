@@ -5,7 +5,11 @@ import {
   WeatherData, 
   RiskAssessmentResult, 
   MLEvaluationResult, 
-  AuditLogItem 
+  AuditLogItem,
+  RealWorldDisasterItem,
+  DistressBeaconItem,
+  ScenarioSimulationResult,
+  SensorItem
 } from '../types';
 
 export const API = {
@@ -198,5 +202,90 @@ export const API = {
   async getStatus(): Promise<any> {
     const res = await fetch('/api/status');
     return res.json();
+  },
+
+  // 11. Real-World Disasters (USGS Live Feed)
+  async getRealWorldDisasters(minMag = 2.5): Promise<{ success: boolean; source: string; count: number; disasters: RealWorldDisasterItem[] }> {
+    try {
+      const res = await fetch(`/api/real-world-disasters?minMag=${minMag}`);
+      if (!res.ok) throw new Error(`Disasters API returned ${res.status}`);
+      return res.json();
+    } catch (e: any) {
+      console.warn('Real-world disasters fetch failed:', e.message);
+      return { success: false, source: 'Offline Fallback', count: 0, disasters: [] };
+    }
+  },
+
+  // 12. Civilian SOS Distress Beacons
+  async getDistressBeacons(): Promise<DistressBeaconItem[]> {
+    const res = await fetch('/api/distress-beacons');
+    if (!res.ok) throw new Error('Failed to fetch distress beacons');
+    return res.json();
+  },
+
+  async createDistressBeacon(data: Partial<DistressBeaconItem>): Promise<DistressBeaconItem> {
+    const res = await fetch('/api/distress-beacons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create distress beacon');
+    return res.json();
+  },
+
+  async updateDistressBeaconStatus(id: string, status: string): Promise<DistressBeaconItem> {
+    const res = await fetch(`/api/distress-beacons/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.ok) throw new Error('Failed to update beacon status');
+    return res.json();
+  },
+
+  // 13. What-If Scenario Simulator
+  async simulateScenario(payload: any): Promise<ScenarioSimulationResult> {
+    const res = await fetch('/api/simulate-scenario', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) throw new Error('Scenario simulation failed');
+    return res.json();
+  },
+
+  // 14. IoT Disaster Sensors Network (Fast Telemetry)
+  async getSensors(): Promise<{ success: boolean; count: number; activeCount: number; criticalCount: number; warningCount: number; sensors: SensorItem[] }> {
+    const res = await fetch('/api/sensors');
+    if (!res.ok) throw new Error('Failed to fetch sensors telemetry');
+    return res.json();
+  },
+
+  async getSensorsStream(): Promise<{ success: boolean; streamTimestamp: string; criticalAlertsTriggered: string[]; sensors: SensorItem[] }> {
+    const res = await fetch('/api/sensors/stream');
+    if (!res.ok) throw new Error('Failed to stream sensor telemetry');
+    return res.json();
+  },
+
+  async simulateSensorReading(id: string, value: number): Promise<{ success: boolean; sensor: SensorItem }> {
+    const res = await fetch(`/api/sensors/${id}/reading`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    });
+    if (!res.ok) throw new Error('Failed to update sensor reading');
+    return res.json();
+  },
+
+  async triggerFastSurge(hazardType: string): Promise<{ success: boolean; message: string; affectedSensors: SensorItem[] }> {
+    const res = await fetch('/api/sensors/fast-trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hazardType }),
+    });
+    if (!res.ok) throw new Error('Failed to trigger fast sensor surge');
+    return res.json();
   }
 };
+
+
